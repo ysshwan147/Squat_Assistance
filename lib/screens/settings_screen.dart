@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:squat_assistance/screens/connect_machine.dart';
-import 'package:squat_assistance/screens/edit_user_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -35,13 +34,18 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
+                  onTap: () async {
+                    final BluetoothDevice? selectedDevice =
+                        await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const EditUserScreen(),
+                        builder: (context) {
+                          return const ConnectMachineScreen(
+                              checkAvailability: false);
+                        },
                       ),
                     );
+
+                    Navigator.of(context).pop(selectedDevice);
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -62,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            "사용자 편집",
+                            "횟수 센서 연결",
                             style: TextStyle(
                               fontSize: 24,
                               color: theme.colorScheme.background,
@@ -84,6 +88,8 @@ class SettingsScreen extends StatelessWidget {
                         },
                       ),
                     );
+
+                    Navigator.of(context).pop(selectedDevice);
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -104,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            "운동 기구 연결",
+                            "비상 센서 연결",
                             style: TextStyle(
                               fontSize: 24,
                               color: theme.colorScheme.background,

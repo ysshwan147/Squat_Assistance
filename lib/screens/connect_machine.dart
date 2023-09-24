@@ -35,8 +35,6 @@ class _ConnectMachineScreenState extends State<ConnectMachineScreen> {
   StreamSubscription<BluetoothDiscoveryResult>? _discoveryStreamSubscription;
   bool _isDiscovering = false;
 
-  BackgroundCollectingTask? _collectingTask;
-
   _ConnectMachineScreenState();
 
   @override
@@ -101,7 +99,6 @@ class _ConnectMachineScreenState extends State<ConnectMachineScreen> {
   void dispose() {
     // Avoid memory leak (`setState` after dispose) and cancel discovery
     _discoveryStreamSubscription?.cancel();
-    _collectingTask?.dispose();
 
     super.dispose();
   }
@@ -141,35 +138,6 @@ class _ConnectMachineScreenState extends State<ConnectMachineScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _startBackgroundTask(
-    BuildContext context,
-    BluetoothDevice server,
-  ) async {
-    try {
-      _collectingTask = await BackgroundCollectingTask.connect(server);
-      await _collectingTask!.start();
-    } catch (ex) {
-      _collectingTask?.cancel();
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error occured while connecting'),
-            content: Text(ex.toString()),
-            actions: <Widget>[
-              TextButton(
-                child: const Text("Close"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 }
 

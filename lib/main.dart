@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           error: Colors.red.shade700,
         ),
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }

@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:squat_assistance/background_collecting_task.dart';
 import 'package:squat_assistance/screens/settings_screen.dart';
 import 'package:squat_assistance/widgets/user_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final bool isConnected = true;
 
-  const HomeScreen({super.key});
+  BluetoothDevice? deviceWithAcc;
+  BluetoothDevice? deviceWithBuzzer;
+
+  BackgroundCollectingTask? _collectingTaskWithAcc;
+  BackgroundCollectingTask? _collectingTaskWithBuzzer;
+
+  @override
+  void dispose() {
+    FlutterBluetoothSerial.instance.setPairingRequestHandler(null);
+    _collectingTaskWithAcc?.dispose();
+    _collectingTaskWithBuzzer?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +39,31 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: theme.colorScheme.background,
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
+            onPressed: () async {
+              final BluetoothDevice? selectedDevice =
+                  await Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
+                  builder: (context) {
+                    return const SettingsScreen();
+                  },
                 ),
               );
+
+              if (selectedDevice != null) {
+                if (deviceWithAcc == null) {
+                  deviceWithAcc = selectedDevice;
+                  await _startBackgroundTaskWithAcc(deviceWithAcc!);
+                } else if (deviceWithBuzzer == null) {
+                  deviceWithBuzzer = selectedDevice;
+                  await _startBackgroundTaskWithAcc(deviceWithBuzzer!);
+                } else {
+                  _collectingTaskWithAcc?.cancel();
+                  _collectingTaskWithBuzzer?.cancel();
+                }
+                setState(() {
+                  /* Update for `_collectingTask.inProgress` */
+                });
+              }
             },
             icon: Icon(
               Icons.settings,
@@ -49,6 +88,26 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
     );
+  }
+
+  Future<void> _startBackgroundTaskWithAcc(BluetoothDevice server) async {
+    try {
+      _collectingTaskWithAcc =
+          await BackgroundCollectingTask.connectWithAcc(server);
+      await _collectingTaskWithAcc!.start();
+    } catch (ex) {
+      _collectingTaskWithAcc?.cancel();
+    }
+  }
+
+  Future<void> _startBackgroundTaskWithBuzzer(BluetoothDevice server) async {
+    try {
+      _collectingTaskWithBuzzer =
+          await BackgroundCollectingTask.connectWithAcc(server);
+      await _collectingTaskWithBuzzer!.start();
+    } catch (ex) {
+      _collectingTaskWithBuzzer?.cancel();
+    }
   }
 }
 

@@ -4,16 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
 
-class DataSample {
-  double temperature1;
-  double temperature2;
-  double waterpHlevel;
+class DataSampleWithAcc {
+  int squatCount;
+
+  DataSampleWithAcc({
+    required this.squatCount,
+  });
+}
+
+class DataSampleWithBuzzer {
+  int isStart;
+  int isEmergency;
   DateTime timestamp;
 
-  DataSample({
-    required this.temperature1,
-    required this.temperature2,
-    required this.waterpHlevel,
+  DataSampleWithBuzzer({
+    required this.isStart,
+    required this.isEmergency,
     required this.timestamp,
   });
 }
@@ -29,32 +35,33 @@ class BackgroundCollectingTask extends Model {
       );
 
   final BluetoothConnection _connection;
-  List<int> _buffer = List<int>.empty(growable: true);
+  List<int> _bufferWithAcc = List<int>.empty(growable: true);
+  List<int> _bufferWithBuzzer = List<int>.empty(growable: true);
 
   // @TODO , Such sample collection in real code should be delegated
   // (via `Stream<DataSample>` preferably) and then saved for later
   // displaying on chart (or even stright prepare for displaying).
   // @TODO ? should be shrinked at some point, endless colleting data would cause memory shortage.
-  List<DataSample> samples = List<DataSample>.empty(growable: true);
+  List<DataSampleWithAcc> samplesWithAcc =
+      List<DataSampleWithAcc>.empty(growable: true);
+  List<DataSampleWithBuzzer> samplesWithBuzzer =
+      List<DataSampleWithBuzzer>.empty(growable: true);
 
   bool inProgress = false;
 
-  BackgroundCollectingTask._fromConnection(this._connection) {
+  BackgroundCollectingTask._fromConnectionWithAcc(this._connection) {
     _connection.input!.listen((data) {
-      _buffer += data;
+      _bufferWithAcc += data;
 
       while (true) {
         // If there is a sample, and it is full sent
-        int index = _buffer.indexOf('t'.codeUnitAt(0));
-        if (index >= 0 && _buffer.length - index >= 7) {
-          final DataSample sample = DataSample(
-              temperature1: (_buffer[index + 1] + _buffer[index + 2] / 100),
-              temperature2: (_buffer[index + 3] + _buffer[index + 4] / 100),
-              waterpHlevel: (_buffer[index + 5] + _buffer[index + 6] / 100),
-              timestamp: DateTime.now());
-          _buffer.removeRange(0, index + 7);
+        if (_bufferWithAcc.isNotEmpty) {
+          final DataSampleWithAcc sample = DataSampleWithAcc(
+            squatCount: _bufferWithAcc[0],
+          );
+          _bufferWithAcc.removeRange(0, 1);
 
-          samples.add(sample);
+          samplesWithAcc.add(sample);
           notifyListeners(); // Note: It shouldn't be invoked very often - in this example data comes at every second, but if there would be more data, it should update (including repaint of graphs) in some fixed interval instead of after every sample.
           //print("${sample.timestamp.toString()} -> ${sample.temperature1} / ${sample.temperature2}");
         }
@@ -69,11 +76,47 @@ class BackgroundCollectingTask extends Model {
     });
   }
 
-  static Future<BackgroundCollectingTask> connect(
+  BackgroundCollectingTask._fromConnectionWithBuzzer(this._connection) {
+    _connection.input!.listen((data) {
+      _bufferWithBuzzer += data;
+
+      while (true) {
+        // If there is a sample, and it is full sent
+        if (_bufferWithBuzzer.isNotEmpty) {
+          final DataSampleWithBuzzer sample = DataSampleWithBuzzer(
+            isStart: _bufferWithBuzzer[0],
+            isEmergency: _bufferWithBuzzer[1],
+            timestamp: DateTime.now(),
+          );
+          _bufferWithBuzzer.removeRange(0, 2);
+
+          samplesWithBuzzer.add(sample);
+          notifyListeners(); // Note: It shouldn't be invoked very often - in this example data comes at every second, but if there would be more data, it should update (including repaint of graphs) in some fixed interval instead of after every sample.
+          //print("${sample.timestamp.toString()} -> ${sample.temperature1} / ${sample.temperature2}");
+        }
+        // Otherwise break
+        else {
+          break;
+        }
+      }
+    }).onDone(() {
+      inProgress = false;
+      notifyListeners();
+    });
+  }
+
+  static Future<BackgroundCollectingTask> connectWithAcc(
       BluetoothDevice server) async {
     final BluetoothConnection connection =
         await BluetoothConnection.toAddress(server.address);
-    return BackgroundCollectingTask._fromConnection(connection);
+    return BackgroundCollectingTask._fromConnectionWithAcc(connection);
+  }
+
+  static Future<BackgroundCollectingTask> connectWithBuzzer(
+      BluetoothDevice server) async {
+    final BluetoothConnection connection =
+        await BluetoothConnection.toAddress(server.address);
+    return BackgroundCollectingTask._fromConnectionWithBuzzer(connection);
   }
 
   void dispose() {
@@ -82,8 +125,10 @@ class BackgroundCollectingTask extends Model {
 
   Future<void> start() async {
     inProgress = true;
-    _buffer.clear();
-    samples.clear();
+    _bufferWithAcc.clear();
+    _bufferWithBuzzer.clear();
+    samplesWithAcc.clear();
+    samplesWithBuzzer.clear();
     notifyListeners();
     _connection.output.add(ascii.encode('start'));
     await _connection.output.allSent;
@@ -108,17 +153,5 @@ class BackgroundCollectingTask extends Model {
     notifyListeners();
     _connection.output.add(ascii.encode('start'));
     await _connection.output.allSent;
-  }
-
-  Iterable<DataSample> getLastOf(Duration duration) {
-    DateTime startingTime = DateTime.now().subtract(duration);
-    int i = samples.length;
-    do {
-      i -= 1;
-      if (i <= 0) {
-        break;
-      }
-    } while (samples[i].timestamp.isAfter(startingTime));
-    return samples.getRange(i, samples.length);
   }
 }
