@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class UserDetailScreen extends StatelessWidget {
+class UserDetailScreen extends StatefulWidget {
   final String name;
 
   const UserDetailScreen({
@@ -9,17 +9,35 @@ class UserDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<UserDetailScreen> createState() => _UserDetailScreenState();
+}
+
+class _UserDetailScreenState extends State<UserDetailScreen> {
+  bool isEmergency = true;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final Color bgColor = theme.colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: bgColor,
         foregroundColor: theme.colorScheme.background,
         title: Text(
-          name,
+          widget.name,
           style: const TextStyle(fontSize: 28),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Icon(
+              Icons.warning_amber_rounded,
+              color: isEmergency ? theme.colorScheme.error : bgColor,
+              size: 30,
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(30),
@@ -30,11 +48,21 @@ class UserDetailScreen extends StatelessWidget {
               "2023.08.19",
               style: TextStyle(
                 fontSize: 40,
-                color: theme.colorScheme.primary,
+                color: bgColor,
               ),
             ),
             const SizedBox(
-              height: 30,
+              height: 20,
+            ),
+            Text(
+              "Machine 1 사용중",
+              style: TextStyle(
+                fontSize: 28,
+                color: bgColor,
+              ),
+            ),
+            const SizedBox(
+              height: 20,
             ),
             Row(
               children: [
@@ -44,14 +72,14 @@ class UserDetailScreen extends StatelessWidget {
                       "시작",
                       style: TextStyle(
                         fontSize: 28,
-                        color: theme.colorScheme.primary,
+                        color: bgColor,
                       ),
                     ),
                     Text(
                       "경과",
                       style: TextStyle(
                         fontSize: 28,
-                        color: theme.colorScheme.primary,
+                        color: bgColor,
                       ),
                     ),
                   ],
@@ -63,14 +91,14 @@ class UserDetailScreen extends StatelessWidget {
                         "11:11:11",
                         style: TextStyle(
                           fontSize: 28,
-                          color: theme.colorScheme.primary,
+                          color: bgColor,
                         ),
                       ),
                       Text(
                         "00:30:00",
                         style: TextStyle(
                           fontSize: 28,
-                          color: theme.colorScheme.primary,
+                          color: bgColor,
                         ),
                       ),
                     ],
@@ -82,13 +110,13 @@ class UserDetailScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(
-              height: 30,
+              height: 20,
             ),
             Text(
               "27회",
               style: TextStyle(
                 fontSize: 36,
-                color: theme.colorScheme.primary,
+                color: bgColor,
               ),
             ),
             Container(
@@ -97,7 +125,7 @@ class UserDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: theme.colorScheme.primary,
+                    color: bgColor,
                   ),
                 ),
               ),

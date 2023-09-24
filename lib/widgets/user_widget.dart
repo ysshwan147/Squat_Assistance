@@ -15,7 +15,7 @@ class User extends StatefulWidget {
 
 class _UserState extends State<User> {
   bool isUsing = false;
-  bool isEmergency = false;
+  bool isEmergency = true;
 
   void setIsUsingByBLE() {
     setState(() {
