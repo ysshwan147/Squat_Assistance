@@ -1,11 +1,124 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-class ConnectMachineScreen extends StatelessWidget {
-  const ConnectMachineScreen({super.key});
+import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:squat_assistance/background_collecting_task.dart';
+
+class ConnectMachineScreen extends StatefulWidget {
+  final bool checkAvailability;
+
+  const ConnectMachineScreen({super.key, required this.checkAvailability});
+
+  @override
+  State<ConnectMachineScreen> createState() => _ConnectMachineScreenState();
+}
+
+enum _DeviceAvailability {
+  no,
+  maybe,
+  yes,
+}
+
+class _DeviceWithAvailability {
+  BluetoothDevice device;
+  _DeviceAvailability availability;
+  int? rssi;
+
+  _DeviceWithAvailability(this.device, this.availability);
+}
+
+class _ConnectMachineScreenState extends State<ConnectMachineScreen> {
+  List<_DeviceWithAvailability> devices =
+      List<_DeviceWithAvailability>.empty(growable: true);
+
+  // Availability
+  StreamSubscription<BluetoothDiscoveryResult>? _discoveryStreamSubscription;
+  bool _isDiscovering = false;
+
+  BackgroundCollectingTask? _collectingTask;
+
+  _ConnectMachineScreenState();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _isDiscovering = widget.checkAvailability;
+
+    if (_isDiscovering) {
+      _startDiscovery();
+    }
+
+    // Setup a list of the bonded devices
+    FlutterBluetoothSerial.instance
+        .getBondedDevices()
+        .then((List<BluetoothDevice> bondedDevices) {
+      setState(() {
+        devices = bondedDevices
+            .map(
+              (device) => _DeviceWithAvailability(
+                device,
+                widget.checkAvailability
+                    ? _DeviceAvailability.maybe
+                    : _DeviceAvailability.yes,
+              ),
+            )
+            .toList();
+      });
+    });
+  }
+
+  void _restartDiscovery() {
+    setState(() {
+      _isDiscovering = true;
+    });
+
+    _startDiscovery();
+  }
+
+  void _startDiscovery() {
+    _discoveryStreamSubscription =
+        FlutterBluetoothSerial.instance.startDiscovery().listen((r) {
+      setState(() {
+        Iterator i = devices.iterator;
+        while (i.moveNext()) {
+          var device = i.current;
+          if (device.device == r.device) {
+            device.availability = _DeviceAvailability.yes;
+            device.rssi = r.rssi;
+          }
+        }
+      });
+    });
+    _discoveryStreamSubscription?.onDone(() {
+      setState(() {
+        _isDiscovering = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // Avoid memory leak (`setState` after dispose) and cancel discovery
+    _discoveryStreamSubscription?.cancel();
+    _collectingTask?.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    List<BluetoothDeviceListEntry> list = devices
+        .map((device) => BluetoothDeviceListEntry(
+              device: device.device,
+              enabled: device.availability == _DeviceAvailability.yes,
+              onTap: () {
+                Navigator.of(context).pop(device.device);
+              },
+            ))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -16,7 +129,76 @@ class ConnectMachineScreen extends StatelessWidget {
           style: TextStyle(fontSize: 28),
         ),
       ),
-      body: const Placeholder(),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: _restartDiscovery,
+            child: const Text("Search the device"),
+          ),
+          Expanded(
+            child: ListView(children: list),
+          ),
+        ],
+      ),
     );
   }
+
+  Future<void> _startBackgroundTask(
+    BuildContext context,
+    BluetoothDevice server,
+  ) async {
+    try {
+      _collectingTask = await BackgroundCollectingTask.connect(server);
+      await _collectingTask!.start();
+    } catch (ex) {
+      _collectingTask?.cancel();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error occured while connecting'),
+            content: Text(ex.toString()),
+            actions: <Widget>[
+              TextButton(
+                child: const Text("Close"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+}
+
+class BluetoothDeviceListEntry extends ListTile {
+  BluetoothDeviceListEntry({
+    super.key,
+    required BluetoothDevice device,
+    int? rssi,
+    GestureTapCallback? onTap,
+    GestureLongPressCallback? onLongPress,
+    bool enabled = true,
+  }) : super(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          enabled: enabled,
+          leading: const Icon(
+              Icons.devices), // @TODO . !BluetoothClass! class aware icon
+          title: Text(device.name ?? ""),
+          subtitle: Text(device.address.toString()),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              device.isConnected
+                  ? const Icon(Icons.import_export)
+                  : const SizedBox(width: 0, height: 0),
+              device.isBonded
+                  ? const Icon(Icons.link)
+                  : const SizedBox(width: 0, height: 0),
+            ],
+          ),
+        );
 }

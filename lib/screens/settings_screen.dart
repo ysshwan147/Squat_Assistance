@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:squat_assistance/screens/connect_machine.dart';
 import 'package:squat_assistance/screens/edit_user_screen.dart';
 
@@ -11,6 +12,7 @@ class SettingsScreen extends StatelessWidget {
     Color bgColor = theme.colorScheme.primary;
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.secondary,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.background,
@@ -30,71 +32,93 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Settings(name: "사용자 편집", screen: EditUserScreen()),
-                Settings(name: "운동 기구 연결", screen: ConnectMachineScreen())
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditUserScreen(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      border: const Border(
+                        bottom: BorderSide(
+                          width: 3,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 30,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "사용자 편집",
+                            style: TextStyle(
+                              fontSize: 24,
+                              color: theme.colorScheme.background,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    final BluetoothDevice? selectedDevice =
+                        await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const ConnectMachineScreen(
+                              checkAvailability: false);
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      border: const Border(
+                        bottom: BorderSide(
+                          width: 3,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 30,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "운동 기구 연결",
+                            style: TextStyle(
+                              fontSize: 24,
+                              color: theme.colorScheme.background,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class Settings extends StatelessWidget {
-  final String name;
-  final Widget screen;
-
-  const Settings({
-    super.key,
-    required this.name,
-    required this.screen,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    Color bgColor = theme.colorScheme.primary;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => screen,
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: const Border(
-            bottom: BorderSide(
-              width: 3,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 30,
-            vertical: 30,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: TextStyle(
-                  fontSize: 24,
-                  color: theme.colorScheme.background,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
