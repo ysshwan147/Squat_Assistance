@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AddUserScreen extends StatelessWidget {
-  const AddUserScreen({super.key});
+class EditUserScreen extends StatelessWidget {
+  const EditUserScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class AddUserScreen extends StatelessWidget {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.background,
         title: const Text(
-          "사용자 추가",
+          "사용자 편집",
           style: TextStyle(fontSize: 28),
         ),
       ),

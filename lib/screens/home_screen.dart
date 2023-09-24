@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squat_assistance/screens/add_user_screen.dart';
+import 'package:squat_assistance/screens/settings_screen.dart';
 import 'package:squat_assistance/widgets/user_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -22,12 +22,12 @@ class HomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AddUserScreen(),
+                  builder: (context) => const SettingsScreen(),
                 ),
               );
             },
             icon: Icon(
-              Icons.add,
+              Icons.settings,
               size: 35,
               color: theme.colorScheme.background,
             ),
@@ -42,7 +42,7 @@ class HomeScreen extends StatelessWidget {
           ? const UserList()
           : const Center(
               child: Text(
-                "There are no connected devices",
+                "There are no connected machines",
                 style: TextStyle(
                   fontSize: 24,
                 ),
