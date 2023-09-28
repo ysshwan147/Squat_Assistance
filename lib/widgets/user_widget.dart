@@ -28,11 +28,24 @@ class _UserState extends State<User> {
     final BackgroundCollectingTaskWithBuzzer taskWithBuzzer =
         BackgroundCollectingTaskWithBuzzer.of(context, rebuildOnChange: true);
 
-    bool isUsing = taskWithAcc.samplesWithAcc.isNotEmpty;
+    final isUsing = taskWithAcc.samplesWithAcc.isNotEmpty;
 
-    bool isEmergency = taskWithBuzzer.samplesWithBuzzer.isEmpty
+    final isEmergency = taskWithBuzzer.samplesWithBuzzer.isEmpty
         ? false
         : taskWithBuzzer.samplesWithBuzzer.last.isEmergency;
+
+    final startTime =
+        isUsing ? taskWithAcc.samplesWithAcc.first.timestamp : null;
+    final currentTime = DateTime.now();
+    final exerciseTime = isUsing ? currentTime.difference(startTime!) : null;
+
+    String? temp;
+    if (exerciseTime != null && exerciseTime.inHours < 10) {
+      temp = "0${exerciseTime.toString()}";
+    } else if (exerciseTime != null) {
+      temp = exerciseTime.toString();
+    }
+    final strExerciseTime = temp?.substring(0, 8);
 
     final theme = Theme.of(context);
     Color bgColor =
@@ -94,7 +107,7 @@ class _UserState extends State<User> {
                 ],
               ),
               Text(
-                "Time",
+                isUsing ? strExerciseTime! : "00:00:00",
                 style: TextStyle(
                   fontSize: 24,
                   color: theme.colorScheme.background,

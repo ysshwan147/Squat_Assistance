@@ -15,6 +15,9 @@ int count = 0;             // 왕복 횟수 누적
 float oldTime = 0.0f;
 float currentTime = 0.0f;
 float delayTime = 0.0f;
+float zeroDelayTime = 0.0f;
+
+bool isStart = true;
 
 void setup() {
   Serial.begin(9600);
@@ -48,34 +51,51 @@ void loop() {
   if (state != lastState) {
     if (state == HIGH) {
       count++; // 의자가 상승할 때
+      isStart = true;
+      zeroDelayTime = 0.0f;
     }
     lastState = state;
-    
-    if (delayTime > 2000.0f){
-
-      int exp = -1;
-      int temp = count;
-      while (true) {
-        if (temp < 1) {
-          break;
-        }
-        temp /= 10;
-        exp += 1;
-      }
-      // 왕복 횟수를 시리얼 모니터에 출력
-      Serial.print("Total Reciprocations: ");
-      Serial.print("a");
-      Serial.print(exp);
-      Serial.println(count);
-
-      BTSerial.print("a");
-      BTSerial.print(exp);
-      BTSerial.println(count);
-
-      delayTime = 0.0f;
-    }
-
-
   }
+  if (isStart && delayTime > 1000.0f){
+
+    int exp = -1;
+    int temp = count;
+    while (true) {
+      if (temp < 1) {
+        break;
+      }
+      temp /= 10;
+      exp += 1;
+    }
+    if (temp <= 0) {
+      exp = 0;
+    }
+    // 왕복 횟수를 시리얼 모니터에 출력
+    Serial.print("Total Reciprocations: ");
+    Serial.print("a");
+    Serial.print(exp);
+    Serial.println(count);
+
+    BTSerial.print("a");
+    BTSerial.print(exp);
+    BTSerial.println(count);
+
+    delayTime = 0.0f;
+
+    if (count <= 0) {
+      isStart = false;
+    }
+  }
+
   delayTime += deltaTime;
+
+  if (isStart) {
+    zeroDelayTime += deltaTime;
+  }
+
+  if (zeroDelayTime >= 300000.0f) {
+    count = 0;
+
+    zeroDelayTime = 0.0f;
+  }
 }

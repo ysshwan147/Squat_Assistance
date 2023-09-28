@@ -23,6 +23,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     final BackgroundCollectingTaskWithBuzzer taskWithBuzzer =
         BackgroundCollectingTaskWithBuzzer.of(context, rebuildOnChange: true);
 
+    bool isUsing = taskWithAcc.samplesWithAcc.isNotEmpty;
+
     bool isEmergency = taskWithBuzzer.samplesWithBuzzer.isEmpty
         ? false
         : taskWithBuzzer.samplesWithBuzzer.last.isEmergency;
@@ -30,6 +32,25 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     int count = taskWithAcc.samplesWithAcc.isEmpty
         ? 0
         : taskWithAcc.samplesWithAcc.last.squatCount;
+
+    final today = DateTime.now();
+    final year = today.year;
+    final month = today.month;
+    final day = today.day;
+
+    final startTime =
+        isUsing ? taskWithAcc.samplesWithAcc.first.timestamp : null;
+    final strStartTime = startTime?.toIso8601String().substring(11, 19);
+
+    final exerciseTime = isUsing ? today.difference(startTime!) : null;
+
+    String? temp;
+    if (exerciseTime != null && exerciseTime.inHours < 10) {
+      temp = "0${exerciseTime.toString()}";
+    } else if (exerciseTime != null) {
+      temp = exerciseTime.toString();
+    }
+    final strExerciseTime = temp?.substring(0, 8);
 
     final theme = Theme.of(context);
     final Color bgColor = theme.colorScheme.primary;
@@ -47,7 +68,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Icon(
               Icons.warning_amber_rounded,
-              color: isEmergency ? theme.colorScheme.error : bgColor,
+              color: isUsing && isEmergency ? theme.colorScheme.error : bgColor,
               size: 30,
             ),
           ),
@@ -59,7 +80,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "2023.08.19",
+              "$year.$month.$day",
               style: TextStyle(
                 fontSize: 40,
                 color: bgColor,
@@ -69,7 +90,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               height: 20,
             ),
             Text(
-              "Machine 1 사용중",
+              isUsing ? "Machine 1 사용중" : "Not connected",
               style: TextStyle(
                 fontSize: 28,
                 color: bgColor,
@@ -102,14 +123,14 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   child: Column(
                     children: [
                       Text(
-                        "11:11:11",
+                        isUsing ? strStartTime! : "00:00:00",
                         style: TextStyle(
                           fontSize: 28,
                           color: bgColor,
                         ),
                       ),
                       Text(
-                        "00:30:00",
+                        isUsing ? strExerciseTime! : "00:00:00",
                         style: TextStyle(
                           fontSize: 28,
                           color: bgColor,
