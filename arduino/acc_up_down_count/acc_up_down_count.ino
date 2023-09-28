@@ -7,7 +7,7 @@ const int xPin = A0;      // X축 핀
 const int yPin = A1;      // Y축 핀
 const int zPin = A2;      // Z축 핀
 
-const int threshold = 100; // 가속도 상승/하강을 감지하는 임계값 (조정 필요)
+const int threshold = 200; // 가속도 상승/하강을 감지하는 임계값 (조정 필요)
 int state = LOW;           // 현재 의자 상태 (상승/하강)
 int lastState = LOW;       // 이전 의자 상태
 int count = 0;             // 왕복 횟수 누적
@@ -51,13 +51,23 @@ void loop() {
     }
     lastState = state;
     
-    if (delayTime > 1.0f){
+    if (delayTime > 2000.0f){
 
-    
+      int exp = 0;
+      int temp = count;
+      while (true) {
+        if (temp < 1) {
+          break;
+        }
+        temp /= 10;
+        exp += 1;
+      }
       // 왕복 횟수를 시리얼 모니터에 출력
       Serial.print("Total Reciprocations: ");
       Serial.println(count);
 
+      BTSerial.print("a");
+      BTSerial.print(exp);
       BTSerial.println(count);
 
       delayTime = 0.0f;

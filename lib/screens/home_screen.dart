@@ -50,15 +50,17 @@ class _HomeScreenState extends State<HomeScreen> {
               );
 
               if (selectedDevice != null) {
-                if (deviceWithAcc == null) {
-                  deviceWithAcc = selectedDevice;
-                  await _startBackgroundTaskWithAcc(deviceWithAcc!);
-                } else if (deviceWithBuzzer == null) {
-                  deviceWithBuzzer = selectedDevice;
-                  await _startBackgroundTaskWithAcc(deviceWithBuzzer!);
-                } else {
+                if (deviceWithAcc != null && deviceWithBuzzer != null) {
                   _collectingTaskWithAcc?.cancel();
                   _collectingTaskWithBuzzer?.cancel();
+                  deviceWithAcc = null;
+                  deviceWithBuzzer = null;
+                } else if (deviceWithAcc != null && deviceWithBuzzer == null) {
+                  deviceWithBuzzer = selectedDevice;
+                  await _startBackgroundTaskWithBuzzer(deviceWithBuzzer!);
+                } else {
+                  deviceWithAcc = selectedDevice;
+                  await _startBackgroundTaskWithAcc(deviceWithAcc!);
                 }
                 setState(() {
                   /* Update for `_collectingTask.inProgress` */
@@ -103,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startBackgroundTaskWithBuzzer(BluetoothDevice server) async {
     try {
       _collectingTaskWithBuzzer =
-          await BackgroundCollectingTask.connectWithAcc(server);
+          await BackgroundCollectingTask.connectWithBuzzer(server);
       await _collectingTaskWithBuzzer!.start();
     } catch (ex) {
       _collectingTaskWithBuzzer?.cancel();
@@ -132,12 +134,6 @@ class UserList extends StatelessWidget {
           children: [
             User(
               name: "User1",
-            ),
-            User(
-              name: "User2",
-            ),
-            User(
-              name: "User3",
             ),
           ],
         ),

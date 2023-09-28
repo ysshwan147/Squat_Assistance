@@ -13,12 +13,10 @@ class DataSampleWithAcc {
 }
 
 class DataSampleWithBuzzer {
-  int isStart;
-  int isEmergency;
+  bool isEmergency;
   DateTime timestamp;
 
   DataSampleWithBuzzer({
-    required this.isStart,
     required this.isEmergency,
     required this.timestamp,
   });
@@ -34,9 +32,8 @@ class BackgroundCollectingTask extends Model {
         rebuildOnChange: rebuildOnChange,
       );
 
-  final BluetoothConnection _connection;
-  List<int> _bufferWithAcc = List<int>.empty(growable: true);
-  List<int> _bufferWithBuzzer = List<int>.empty(growable: true);
+  late final BluetoothConnection _connection;
+  List<int> _buffer = List<int>.empty(growable: true);
 
   // @TODO , Such sample collection in real code should be delegated
   // (via `Stream<DataSample>` preferably) and then saved for later
@@ -51,15 +48,26 @@ class BackgroundCollectingTask extends Model {
 
   BackgroundCollectingTask._fromConnectionWithAcc(this._connection) {
     _connection.input!.listen((data) {
-      _bufferWithAcc += data;
+      _buffer += data;
 
       while (true) {
         // If there is a sample, and it is full sent
-        if (_bufferWithAcc.isNotEmpty) {
+        int index = _buffer.indexOf('a'.codeUnitAt(0));
+        int exp = _buffer[index + 1] - '0'.codeUnitAt(0);
+
+        if (index >= 0 && _buffer.length - index >= exp + 2) {
+          int count = 0;
+          for (int i = 0; i < exp; i++) {
+            count += _buffer[index + 2 + i] - '0'.codeUnitAt(0);
+          }
+
+          print(count);
           final DataSampleWithAcc sample = DataSampleWithAcc(
-            squatCount: _bufferWithAcc[0],
+            squatCount: count,
           );
-          _bufferWithAcc.removeRange(0, 1);
+          _buffer.removeRange(0, index + exp + 2);
+
+          print(sample.squatCount);
 
           samplesWithAcc.add(sample);
           notifyListeners(); // Note: It shouldn't be invoked very often - in this example data comes at every second, but if there would be more data, it should update (including repaint of graphs) in some fixed interval instead of after every sample.
@@ -78,17 +86,20 @@ class BackgroundCollectingTask extends Model {
 
   BackgroundCollectingTask._fromConnectionWithBuzzer(this._connection) {
     _connection.input!.listen((data) {
-      _bufferWithBuzzer += data;
+      _buffer += data;
 
       while (true) {
         // If there is a sample, and it is full sent
-        if (_bufferWithBuzzer.isNotEmpty) {
+        int index = _buffer.indexOf('e'.codeUnitAt(0));
+        if (index >= 0 && _buffer.length - index >= 9) {
           final DataSampleWithBuzzer sample = DataSampleWithBuzzer(
-            isStart: _bufferWithBuzzer[0],
-            isEmergency: _bufferWithBuzzer[1],
+            isEmergency: true,
             timestamp: DateTime.now(),
           );
-          _bufferWithBuzzer.removeRange(0, 2);
+          _buffer.removeRange(0, index + 9);
+
+          print(sample.isEmergency);
+          print(sample.timestamp);
 
           samplesWithBuzzer.add(sample);
           notifyListeners(); // Note: It shouldn't be invoked very often - in this example data comes at every second, but if there would be more data, it should update (including repaint of graphs) in some fixed interval instead of after every sample.
@@ -125,8 +136,7 @@ class BackgroundCollectingTask extends Model {
 
   Future<void> start() async {
     inProgress = true;
-    _bufferWithAcc.clear();
-    _bufferWithBuzzer.clear();
+    _buffer.clear();
     samplesWithAcc.clear();
     samplesWithBuzzer.clear();
     notifyListeners();

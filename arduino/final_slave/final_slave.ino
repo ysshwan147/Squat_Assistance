@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 // #include "HX711.h"
 
-SoftwareSerial bluetooth(13, 12);  // RX, TX for Bluetooth
+SoftwareSerial bluetooth(12, 13);  // RX, TX for Bluetooth
 
 const int buttonPin = 4;
 const int ledPin = 5;
@@ -46,8 +46,8 @@ void loop() {
     digitalWrite(ledPin, HIGH);  // LED를 켭니다.
 
     // "위험합니다" 메시지를 마스터 보드로 전송합니다.
-    Serial.println("Dangerous");
-    bluetooth.println("Dangerous");
+    Serial.println("emergency");
+    bluetooth.println("emergency");
 
     delay(1000);                // 버튼 디바운싱을 위한 짧은 지연
     digitalWrite(ledPin, LOW);  // LED를 끕니다.

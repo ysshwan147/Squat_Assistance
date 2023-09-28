@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:squat_assistance/background_collecting_task.dart';
 
 class ConnectMachineScreen extends StatefulWidget {
   final bool checkAvailability;
