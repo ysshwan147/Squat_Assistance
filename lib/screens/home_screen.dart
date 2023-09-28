@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:squat_assistance/background_collecting_task.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:squat_assistance/background_collecting_task_with_acc.dart';
+import 'package:squat_assistance/background_collecting_task_with_buzzer.dart';
 import 'package:squat_assistance/screens/settings_screen.dart';
 import 'package:squat_assistance/widgets/user_widget.dart';
 
@@ -12,13 +14,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final bool isConnected = true;
+  late bool isConnectedWithAcc;
+  late bool isConnectedWithBuzzer;
 
   BluetoothDevice? deviceWithAcc;
   BluetoothDevice? deviceWithBuzzer;
 
-  BackgroundCollectingTask? _collectingTaskWithAcc;
-  BackgroundCollectingTask? _collectingTaskWithBuzzer;
+  BackgroundCollectingTaskWithAcc? _collectingTaskWithAcc;
+  BackgroundCollectingTaskWithBuzzer? _collectingTaskWithBuzzer;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    isConnectedWithAcc = false;
+    isConnectedWithBuzzer = false;
+  }
 
   @override
   void dispose() {
@@ -55,6 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _collectingTaskWithBuzzer?.cancel();
                   deviceWithAcc = null;
                   deviceWithBuzzer = null;
+                  isConnectedWithAcc = false;
+                  isConnectedWithBuzzer = false;
                 } else if (deviceWithAcc != null && deviceWithBuzzer == null) {
                   deviceWithBuzzer = selectedDevice;
                   await _startBackgroundTaskWithBuzzer(deviceWithBuzzer!);
@@ -79,8 +92,33 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 28),
         ),
       ),
-      body: isConnected
-          ? const UserList()
+      body: isConnectedWithAcc && isConnectedWithBuzzer
+          ? SingleChildScrollView(
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      width: 3,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    ScopedModel<BackgroundCollectingTaskWithBuzzer>(
+                      model: _collectingTaskWithBuzzer!,
+                      child: ScopedModel<BackgroundCollectingTaskWithAcc>(
+                          model: _collectingTaskWithAcc!,
+                          child: User(
+                            name: "User1",
+                            collectingTaskWithAcc: _collectingTaskWithAcc,
+                            collectingTaskWithBuzzer: _collectingTaskWithBuzzer,
+                          )),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : const Center(
               child: Text(
                 "There are no connected machines",
@@ -95,49 +133,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _startBackgroundTaskWithAcc(BluetoothDevice server) async {
     try {
       _collectingTaskWithAcc =
-          await BackgroundCollectingTask.connectWithAcc(server);
+          await BackgroundCollectingTaskWithAcc.connectWithAcc(server);
       await _collectingTaskWithAcc!.start();
+      isConnectedWithAcc = true;
     } catch (ex) {
       _collectingTaskWithAcc?.cancel();
+      isConnectedWithAcc = false;
     }
   }
 
   Future<void> _startBackgroundTaskWithBuzzer(BluetoothDevice server) async {
     try {
       _collectingTaskWithBuzzer =
-          await BackgroundCollectingTask.connectWithBuzzer(server);
+          await BackgroundCollectingTaskWithBuzzer.connectWithBuzzer(server);
       await _collectingTaskWithBuzzer!.start();
+      isConnectedWithBuzzer = true;
     } catch (ex) {
       _collectingTaskWithBuzzer?.cancel();
+      isConnectedWithBuzzer = false;
     }
-  }
-}
-
-class UserList extends StatelessWidget {
-  const UserList({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              width: 3,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        child: const Column(
-          children: [
-            User(
-              name: "User1",
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

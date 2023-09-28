@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:squat_assistance/background_collecting_task_with_acc.dart';
+import 'package:squat_assistance/background_collecting_task_with_buzzer.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final String name;
@@ -13,10 +15,22 @@ class UserDetailScreen extends StatefulWidget {
 }
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
-  bool isEmergency = true;
-
   @override
   Widget build(BuildContext context) {
+    final BackgroundCollectingTaskWithAcc taskWithAcc =
+        BackgroundCollectingTaskWithAcc.of(context, rebuildOnChange: true);
+
+    final BackgroundCollectingTaskWithBuzzer taskWithBuzzer =
+        BackgroundCollectingTaskWithBuzzer.of(context, rebuildOnChange: true);
+
+    bool isEmergency = taskWithBuzzer.samplesWithBuzzer.isEmpty
+        ? false
+        : taskWithBuzzer.samplesWithBuzzer.last.isEmergency;
+
+    int count = taskWithAcc.samplesWithAcc.isEmpty
+        ? 0
+        : taskWithAcc.samplesWithAcc.last.squatCount;
+
     final theme = Theme.of(context);
     final Color bgColor = theme.colorScheme.primary;
 
@@ -113,7 +127,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               height: 20,
             ),
             Text(
-              "27회",
+              "$count 회",
               style: TextStyle(
                 fontSize: 36,
                 color: bgColor,

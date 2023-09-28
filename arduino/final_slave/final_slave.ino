@@ -9,6 +9,8 @@ const int ledPin = 5;
 const float height = 170.0;          // 키 상수 입력
 const long THRESHOLD_VALUE = 20000;  //20kg을 그램 단위로 변
 
+bool flag = false;
+
 // HX711 scale;
 
 void setup() {
@@ -46,8 +48,21 @@ void loop() {
     digitalWrite(ledPin, HIGH);  // LED를 켭니다.
 
     // "위험합니다" 메시지를 마스터 보드로 전송합니다.
-    Serial.println("emergency");
-    bluetooth.println("emergency");
+    if (flag) {
+      flag = false;
+      Serial.print("e");
+      Serial.println(0);
+      bluetooth.print("e");
+      bluetooth.println(0);
+    }
+    else {
+      flag = true;
+      Serial.print("e");
+      Serial.println(1);
+      bluetooth.print("e");
+      bluetooth.println(1);
+    }
+    
 
     delay(1000);                // 버튼 디바운싱을 위한 짧은 지연
     digitalWrite(ledPin, LOW);  // LED를 끕니다.

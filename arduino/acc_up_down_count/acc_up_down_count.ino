@@ -38,8 +38,8 @@ void loop() {
   // 움직임을 감지하고 가속도 값을 읽음
   if (abs(acceleration) >= threshold) {
     state = HIGH;
-    Serial.print("Acceleration: ");
-    Serial.println(acceleration);
+    //Serial.print("Acceleration: ");
+    //Serial.println(acceleration);
   } else {
     state = LOW;
   }
@@ -53,7 +53,7 @@ void loop() {
     
     if (delayTime > 2000.0f){
 
-      int exp = 0;
+      int exp = -1;
       int temp = count;
       while (true) {
         if (temp < 1) {
@@ -64,6 +64,8 @@ void loop() {
       }
       // 왕복 횟수를 시리얼 모니터에 출력
       Serial.print("Total Reciprocations: ");
+      Serial.print("a");
+      Serial.print(exp);
       Serial.println(count);
 
       BTSerial.print("a");

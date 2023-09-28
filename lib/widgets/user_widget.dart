@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:squat_assistance/background_collecting_task_with_acc.dart';
+import 'package:squat_assistance/background_collecting_task_with_buzzer.dart';
 import 'package:squat_assistance/screens/user_detail_screen.dart';
 
 class User extends StatefulWidget {
   final String name;
+  final BackgroundCollectingTaskWithAcc? collectingTaskWithAcc;
+  final BackgroundCollectingTaskWithBuzzer? collectingTaskWithBuzzer;
 
   const User({
     super.key,
     required this.name,
+    required this.collectingTaskWithAcc,
+    required this.collectingTaskWithBuzzer,
   });
 
   @override
@@ -14,17 +21,19 @@ class User extends StatefulWidget {
 }
 
 class _UserState extends State<User> {
-  bool isUsing = false;
-  bool isEmergency = true;
-
-  void setIsUsingByBLE() {
-    setState(() {
-      isUsing = !isUsing;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final BackgroundCollectingTaskWithAcc taskWithAcc =
+        BackgroundCollectingTaskWithAcc.of(context, rebuildOnChange: true);
+    final BackgroundCollectingTaskWithBuzzer taskWithBuzzer =
+        BackgroundCollectingTaskWithBuzzer.of(context, rebuildOnChange: true);
+
+    bool isUsing = taskWithAcc.samplesWithAcc.isNotEmpty;
+
+    bool isEmergency = taskWithBuzzer.samplesWithBuzzer.isEmpty
+        ? false
+        : taskWithBuzzer.samplesWithBuzzer.last.isEmergency;
+
     final theme = Theme.of(context);
     Color bgColor =
         isUsing ? theme.colorScheme.primary : theme.colorScheme.secondary;
@@ -34,8 +43,14 @@ class _UserState extends State<User> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserDetailScreen(
-              name: widget.name,
+            builder: (context) => ScopedModel<BackgroundCollectingTaskWithAcc>(
+              model: widget.collectingTaskWithAcc!,
+              child: ScopedModel<BackgroundCollectingTaskWithBuzzer>(
+                model: widget.collectingTaskWithBuzzer!,
+                child: UserDetailScreen(
+                  name: widget.name,
+                ),
+              ),
             ),
           ),
         );
@@ -72,7 +87,9 @@ class _UserState extends State<User> {
                   ),
                   Icon(
                     Icons.warning_amber_rounded,
-                    color: isEmergency ? theme.colorScheme.error : bgColor,
+                    color: isUsing && isEmergency
+                        ? theme.colorScheme.error
+                        : bgColor,
                   ),
                 ],
               ),
