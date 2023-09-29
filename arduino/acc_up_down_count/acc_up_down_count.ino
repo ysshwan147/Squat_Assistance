@@ -67,7 +67,7 @@ void loop() {
       temp /= 10;
       exp += 1;
     }
-    if (temp <= 0) {
+    if (count <= 0) {
       exp = 0;
     }
     // 왕복 횟수를 시리얼 모니터에 출력
