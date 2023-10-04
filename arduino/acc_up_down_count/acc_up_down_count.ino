@@ -1,4 +1,3 @@
-#
 #include <SoftwareSerial.h>
 
 SoftwareSerial BTSerial(2, 3);
@@ -7,7 +6,7 @@ const int xPin = A0;      // X축 핀
 const int yPin = A1;      // Y축 핀
 const int zPin = A2;      // Z축 핀
 
-const int threshold = 200; // 가속도 상승/하강을 감지하는 임계값 (조정 필요)
+const int threshold = 190; // 가속도 상승/하강을 감지하는 임계값 (조정 필요)
 int state = LOW;           // 현재 의자 상태 (상승/하강)
 int lastState = LOW;       // 이전 의자 상태
 int count = 0;             // 왕복 횟수 누적
@@ -41,8 +40,8 @@ void loop() {
   // 움직임을 감지하고 가속도 값을 읽음
   if (abs(acceleration) >= threshold) {
     state = HIGH;
-    //Serial.print("Acceleration: ");
-    //Serial.println(acceleration);
+    // Serial.print("Acceleration: ");
+    // Serial.println(acceleration);
   } else {
     state = LOW;
   }
@@ -93,7 +92,7 @@ void loop() {
     zeroDelayTime += deltaTime;
   }
 
-  if (zeroDelayTime >= 300000.0f) {
+  if (zeroDelayTime >= 30000.0f) {
     count = 0;
 
     zeroDelayTime = 0.0f;

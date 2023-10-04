@@ -3,6 +3,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:squat_assistance/background_collecting_task_with_acc.dart';
 import 'package:squat_assistance/background_collecting_task_with_buzzer.dart';
+import 'package:squat_assistance/notification.dart';
 import 'package:squat_assistance/screens/settings_screen.dart';
 import 'package:squat_assistance/widgets/user_widget.dart';
 
@@ -25,10 +26,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     isConnectedWithAcc = false;
     isConnectedWithBuzzer = false;
+
+    FlutterLocalNotification.init();
+
+    // 3초 후 권한 요청
+    Future.delayed(const Duration(seconds: 3),
+        FlutterLocalNotification.requestNotificationPermission());
   }
 
   @override

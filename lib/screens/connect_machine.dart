@@ -13,7 +13,6 @@ class ConnectMachineScreen extends StatefulWidget {
 }
 
 enum _DeviceAvailability {
-  no,
   maybe,
   yes,
 }

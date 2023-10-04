@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:squat_assistance/notification.dart';
 
 class DataSampleWithBuzzer {
   bool isEmergency;
@@ -57,6 +58,10 @@ class BackgroundCollectingTaskWithBuzzer extends Model {
 
           print(sample.isEmergency);
           print(sample.timestamp);
+
+          if (sample.isEmergency) {
+            FlutterLocalNotification.showNotification();
+          }
 
           samplesWithBuzzer.add(sample);
           notifyListeners(); // Note: It shouldn't be invoked very often - in this example data comes at every second, but if there would be more data, it should update (including repaint of graphs) in some fixed interval instead of after every sample.

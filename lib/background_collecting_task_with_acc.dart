@@ -59,7 +59,7 @@ class BackgroundCollectingTaskWithAcc extends Model {
           );
           _buffer.removeRange(0, index + numLength + 2);
 
-          print(sample.squatCount);
+          // print(sample.squatCount);
 
           if (sample.squatCount == 0) {
             samplesWithAcc.clear();
